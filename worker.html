@@ -1,0 +1,47 @@
+<script src="enc.js"></script>
+<script>
+	</script>
+<script>
+	function go() {
+		var canvas1 = document.querySelector("canvas");
+		var ctx1 = canvas1.getContext("2d");
+		for (j=0; j<3;j++) {
+		for (var i=0; i<3; i++) {
+		ctx1.fillStyle ="red";
+		ctx1.fillRect(i*40,j*40,20,20);
+		ctx1.fillStyle ="green";
+		ctx1.fillRect(i*40+20,j*40+20,20,20);
+		}
+		}
+		var imageData1 = ctx1.getImageData(0, 0, canvas1.width, canvas1.height).data;
+		var line = 0;
+		var encoder = encode(
+			function(encoder, scanLine) {
+				if (line == canvas1.height) {
+					encoder.finish();	
+				} else {
+					var view = new Uint8Array(scanLine);
+					for (var x = 0; x<canvas1.width; x++) {
+						view[x*3] = imageData1[(line*canvas1.width+x)*4];
+						view[x*3+1] = imageData1[(line*canvas1.width+x)*4+1];
+						view[x*3+2] = imageData1[(line*canvas1.width+x)*4+2];
+					}
+					encoder.writeScanline(scanLine);
+				}
+				line++;
+		},
+		function(blob) {
+			url = URL.createObjectURL(blob);
+			document.querySelector("a").href=url;
+			document.querySelector("img").src=url;
+			document.querySelector("div").innerHTML=blob.size;
+		});
+		encoder.start(canvas1.width, canvas1.height, 50);
+	}
+</script>
+<button onclick="go()">build</button><br>
+<img></img>
+<div></div>
+<canvas width="1000" height="1000"></canvas>
+<a download>Image</a>
+

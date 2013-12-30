@@ -1,0 +1,50 @@
+<script>
+	var blob;
+	function _jswrite(fd, ptr, len) {
+		var pixels = Module.HEAPU8.subarray(ptr, ptr+len);
+		blob = new Blob([pixels], {type:'image/jpeg'});
+		return len;
+	}
+	function go() {
+		var canvas1 = document.querySelector("canvas");
+		var ctx = _joutjs_init(canvas1.width, 100, 4);
+		var ctx1 = canvas1.getContext("2d");
+		for (j=0; j<3;j++) {
+		for (var i=0; i<3; i++) {
+		ctx1.fillStyle ="red";
+		ctx1.fillRect(i*40,j*40,20,20);
+		ctx1.fillStyle ="green";
+		ctx1.fillRect(i*40+20,j*40+20,20,20);
+		}
+		}
+		var imageData1 = ctx1.getImageData(0, 0, canvas1.width, canvas1.height).data;
+		var buf = _malloc(canvas1.width*3*100);
+		var row_ptr = _malloc(4);
+		var HEAPU8 = Module.HEAPU8;
+		var HEAP32 = Module.HEAP32;
+		var imPtr = 0;
+		for (var i=0; i<canvas1.width*100; i++) {
+			HEAPU8[buf + i*3] = imageData1[i*4];
+			HEAPU8[buf + i*3+1] = imageData1[i*4+1];
+			HEAPU8[buf + i*3+2] = imageData1[i*4+2];
+		}
+		for (var i=0; i<canvas1.height; i++) {
+			HEAP32[row_ptr>>2] = buf+i*canvas1.width*3;
+			_jpeg_write_scanlines(ctx, row_ptr, 1);
+		}
+
+		_jpeg_finish_compress(ctx);
+		url = URL.createObjectURL(blob);
+		document.querySelector("a").href=url;
+		document.querySelector("img").src=url;
+		document.querySelector("div").innerHTML=blob.size;
+	}
+</script>
+<script src="cjpeg.js">
+</script>
+<button onclick="go()">build</button>
+<canvas width="64" height="100"></canvas>
+<img></img>
+<div></div>
+<a download>Image</a>
+
